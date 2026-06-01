@@ -30,3 +30,11 @@ model Sesion {
   grupoId     Int
   grupo       Grupo    @relation(fields: [grupoId], references: [id])
 }
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  password  String
+  creadoEn  DateTime @default(now())
+}

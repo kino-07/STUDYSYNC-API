@@ -1,6 +1,7 @@
-const express = require('express');
-const router  = express.Router();
+const express      = require('express');
+const router       = express.Router();
 const grupoController = require('../controllers/gruposController');
+const autenticar   = require('../middlewares/autenticar');
 
 /**
  * @swagger
@@ -15,11 +16,15 @@ const grupoController = require('../controllers/gruposController');
  *   get:
  *     summary: Listar todos los grupos
  *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lista de grupos obtenida exitosamente
+ *         description: Lista de grupos
+ *       401:
+ *         description: Token requerido
  */
-router.get('/', grupoController.getAll);
+router.get('/', autenticar, grupoController.getAll);
 
 /**
  * @swagger
@@ -27,6 +32,8 @@ router.get('/', grupoController.getAll);
  *   get:
  *     summary: Obtener un grupo por ID
  *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -36,10 +43,12 @@ router.get('/', grupoController.getAll);
  *     responses:
  *       200:
  *         description: Grupo encontrado
+ *       401:
+ *         description: Token requerido
  *       404:
  *         description: Grupo no encontrado
  */
-router.get('/:id', grupoController.getById);
+router.get('/:id', autenticar, grupoController.getById);
 
 /**
  * @swagger
@@ -47,6 +56,8 @@ router.get('/:id', grupoController.getById);
  *   post:
  *     summary: Crear nuevo grupo
  *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -66,11 +77,13 @@ router.get('/:id', grupoController.getById);
  *                 example: mañana
  *     responses:
  *       201:
- *         description: Grupo creado exitosamente
+ *         description: Grupo creado
  *       400:
- *         description: Faltan campos obligatorios
+ *         description: Faltan campos
+ *       401:
+ *         description: Token requerido
  */
-router.post('/', grupoController.create);
+router.post('/', autenticar, grupoController.create);
 
 /**
  * @swagger
@@ -78,6 +91,8 @@ router.post('/', grupoController.create);
  *   put:
  *     summary: Actualizar grupo completo
  *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -101,10 +116,12 @@ router.post('/', grupoController.create);
  *     responses:
  *       200:
  *         description: Grupo actualizado
+ *       401:
+ *         description: Token requerido
  *       404:
  *         description: Grupo no encontrado
  */
-router.put('/:id', grupoController.update);
+router.put('/:id', autenticar, grupoController.update);
 
 /**
  * @swagger
@@ -112,6 +129,8 @@ router.put('/:id', grupoController.update);
  *   delete:
  *     summary: Eliminar grupo
  *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -121,9 +140,11 @@ router.put('/:id', grupoController.update);
  *     responses:
  *       200:
  *         description: Grupo eliminado
+ *       401:
+ *         description: Token requerido
  *       404:
  *         description: Grupo no encontrado
  */
-router.delete('/:id', grupoController.remove);
+router.delete('/:id', autenticar, grupoController.remove);
 
 module.exports = router;
