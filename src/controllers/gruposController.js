@@ -1,4 +1,22 @@
 const GrupoModel = require('../models/grupoModel');
+const Redis = require('ioredis');
+
+// Función helper para publicar eventos en Redis
+async function publicarEvento(canal, tipo, payload) {
+  try {
+    const pub = new Redis(process.env.REDIS_URL);
+    await pub.publish(canal, JSON.stringify({
+      tipo,
+      payload,
+      timestamp: new Date().toISOString(),
+      version: '1.0'
+    }));
+    pub.disconnect();
+    console.log(`📤 Evento publicado: [${canal}] ${tipo}`);
+  } catch (err) {
+    console.warn('⚠️ Redis no disponible:', err.message);
+  }
+}
 
 // GET /api/grupos
 const getAll = async (req, res) => {
@@ -33,19 +51,7 @@ const create = async (req, res) => {
     const nuevo = await GrupoModel.create({ nombre, materia, turno, activo: true });
 
     // Publicar evento en Redis
-    try {
-      const Redis = require('ioredis');
-      const pub = new Redis(process.env.REDIS_URL);
-      await pub.publish('study:grupo:creado', JSON.stringify({
-        tipo:      'GRUPO_CREADO',
-        payload:   nuevo,
-        timestamp: new Date().toISOString(),
-        version:   '1.0'
-      }));
-      pub.disconnect();
-    } catch (redisErr) {
-      console.warn('⚠️ Redis no disponible:', redisErr.message);
-    }
+    await publicarEvento('study:grupo:creado', 'GRUPO_CREADO', nuevo);
 
     res.status(201).json({ ok: true, data: nuevo });
   } catch (err) {
@@ -63,6 +69,10 @@ const update = async (req, res) => {
     }
     const actualizado = await GrupoModel.update(id, { nombre, materia, turno, activo });
     if (!actualizado) return res.status(404).json({ ok: false, mensaje: `No existe grupo con id ${id}` });
+
+    // Publicar evento en Redis
+    await publicarEvento('study:grupo:actualizado', 'GRUPO_ACTUALIZADO', actualizado);
+
     res.status(200).json({ ok: true, data: actualizado });
   } catch (err) {
     res.status(500).json({ ok: false, mensaje: err.message });
@@ -75,6 +85,10 @@ const remove = async (req, res) => {
     const id = parseInt(req.params.id);
     const eliminado = await GrupoModel.delete(id);
     if (!eliminado) return res.status(404).json({ ok: false, mensaje: `No existe grupo con id ${id}` });
+
+    // Publicar evento en Redis
+    await publicarEvento('study:grupo:eliminado', 'GRUPO_ELIMINADO', { id, nombre: eliminado.nombre });
+
     res.status(200).json({ ok: true, mensaje: `Grupo '${eliminado.nombre}' eliminado correctamente` });
   } catch (err) {
     res.status(500).json({ ok: false, mensaje: err.message });
